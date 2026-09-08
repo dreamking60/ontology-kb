@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+
+# Internal data (never commit bank-internal content)
+internal/
+
+# Local environment
+.env
+.DS_Store
+
+# Tooling
+.mypy_cache/
+.ruff_cache/

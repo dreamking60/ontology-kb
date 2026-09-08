@@ -1,0 +1,260 @@
+@prefix bc:  <https://ontology.example/banking-core#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+<https://ontology.example/banking-core>
+    a owl:Ontology ;
+    rdfs:label "Banking Core Ontology"@en, "银行核心概念本体"@zh ;
+    rdfs:comment "Lightweight OWL ontology of banking business and product concepts, authored for the banking-concept-kb-mvp demo. Aligned to FIBO terminology by annotation only (see fibo-alignment.ttl)."@en ;
+    owl:versionInfo "0.1.0-mvp" .
+
+###############################################################################
+# Top-level and domain classes
+###############################################################################
+
+bc:Product a owl:Class ;
+    rdfs:label "产品"@zh, "Product"@en ;
+    skos:definition "商业银行向客户提供的金融服务与产品的总称，包括存款、贷款、理财等。"@zh ;
+    skos:definition "Banking products and services offered by commercial banks, including deposits, loans, wealth management and related offerings."@en ;
+    skos:editorialNote "Public generic definition authored for the MVP demo; not internal bank documentation."@en .
+
+bc:Account a owl:Class ;
+    rdfs:label "账户"@zh, "Account"@en ;
+    skos:definition "银行为客户开立的、用于资金往来、核算与记录交易的账户的总称。"@zh ;
+    skos:definition "An arrangement a bank maintains for a customer to record, hold and transact funds."@en ;
+    skos:editorialNote "Public generic definition authored for the MVP demo; not internal bank documentation."@en .
+
+bc:Party a owl:Class ;
+    rdfs:label "主体"@zh, "Party"@en ;
+    skos:definition "参与银行业务或与之相关的法律主体，包括银行自身、零售客户与对公客户等。"@zh ;
+    skos:definition "A legal or natural person involved in banking business, such as the bank itself, retail customers or corporate customers."@en ;
+    skos:editorialNote "Public generic definition authored for the MVP demo; not internal bank documentation."@en .
+
+###############################################################################
+# Deposit hierarchy (存款 → 活期存款 / 定期存款 → 大额存单, 长期定期存款[演示])
+###############################################################################
+
+bc:Deposit a owl:Class ;
+    rdfs:subClassOf bc:Product ;
+    rdfs:label "存款"@zh, "Deposit"@en ;
+    skos:altLabel "存款产品"@zh ;
+    skos:definition "客户存放在银行的资金，银行按约定计息并可按约定支取。"@zh ;
+    skos:definition "Money placed with a bank by a customer, on which the bank pays interest and which the customer may withdraw as agreed."@en ;
+    skos:editorialNote "Public generic definition authored for the MVP demo; not internal bank documentation."@en .
+
+bc:DemandDeposit a owl:Class ;
+    rdfs:subClassOf bc:Deposit ;
+    rdfs:label "活期存款"@zh, "Demand Deposit"@en ;
+    skos:altLabel "活期"@zh ;
+    skos:definition "可以随时存入和支取、无固定期限的存款。"@zh ;
+    skos:definition "A deposit that can be deposited and withdrawn at any time without a fixed term."@en ;
+    skos:editorialNote "Public generic definition authored for the MVP demo; not internal bank documentation."@en .
+
+bc:TimeDeposit a owl:Class ;
+    rdfs:subClassOf bc:Deposit ;
+    rdfs:label "定期存款"@zh, "Time Deposit"@en ;
+    skos:altLabel "定存"@zh ;
+    skos:definition "事先约定存期、到期支取本息的存款，通常利率高于活期存款。"@zh ;
+    skos:definition "A deposit with a pre-agreed term that pays principal and interest at maturity, usually at a higher rate than a demand deposit."@en ;
+    skos:editorialNote "Public generic definition authored for the MVP demo; not internal bank documentation."@en .
+
+bc:CertificateOfDeposit a owl:Class ;
+    rdfs:subClassOf bc:TimeDeposit ;
+    rdfs:label "大额存单"@zh, "Certificate of Deposit"@en ;
+    skos:altLabel "CD"@en, "大额可转让存单"@zh ;
+    skos:definition "商业银行面向个人与企业发行的记账式大额存款凭证，属于一般性存款，期限与起存金额均有较高要求。"@zh ;
+    skos:definition "A large-denomination deposit certificate issued by commercial banks to individuals and enterprises; it counts as ordinary deposit and typically carries a high minimum amount."@en ;
+    skos:editorialNote "Public generic definition authored for the MVP demo; not internal bank documentation."@en .
+
+bc:LongTermTimeDeposit a owl:Class ;
+    rdfs:subClassOf bc:TimeDeposit ;
+    rdfs:label "长期定期存款（演示分类）"@zh, "Long-Term Time Deposit (demo classification)"@en ;
+    skos:definition "演示用分类：由推理演示规则将存期不低于 60 个月的定期存款归入的类别，不代表银行实际产品分类。"@zh ;
+    skos:definition "Demo-only classification produced by the reasoning-demo rule when a time deposit's term is at least 60 months; not a real bank product category."@en ;
+    skos:editorialNote "Demo classification produced by rules.py; introduced solely to demonstrate rule-derived reasoning."@en .
+
+###############################################################################
+# Loan hierarchy (贷款 → 个人贷款 → 住房贷款 / 信用贷款)
+###############################################################################
+
+bc:Loan a owl:Class ;
+    rdfs:subClassOf bc:Product ;
+    rdfs:label "贷款"@zh, "Loan"@en ;
+    skos:definition "银行将资金按约定利率贷放给借款人并在约定期限内收回本息的融资安排。"@zh ;
+    skos:definition "An arrangement in which a bank lends funds to a borrower at an agreed rate, to be repaid with interest within an agreed term."@en ;
+    skos:editorialNote "Public generic definition authored for the MVP demo; not internal bank documentation."@en .
+
+bc:PersonalLoan a owl:Class ;
+    rdfs:subClassOf bc:Loan ;
+    rdfs:label "个人贷款"@zh, "Personal Loan"@en ;
+    skos:definition "银行向个人客户发放的、用于消费或经营等用途的贷款。"@zh ;
+    skos:definition "A loan extended by a bank to an individual customer for consumption, business or other personal purposes."@en ;
+    skos:editorialNote "Public generic definition authored for the MVP demo; not internal bank documentation."@en .
+
+bc:HousingLoan a owl:Class ;
+    rdfs:subClassOf bc:PersonalLoan ;
+    rdfs:label "住房贷款"@zh, "Housing Loan"@en ;
+    skos:altLabel "按揭贷款"@zh, "mortgage"@en ;
+    skos:definition "用于购买自住或投资性房产的个人贷款，通常以所购房产设定抵押。"@zh ;
+    skos:definition "A personal loan used to purchase residential property, typically secured by a mortgage over the purchased property."@en ;
+    skos:editorialNote "Public generic definition authored for the MVP demo; not internal bank documentation."@en .
+
+bc:CreditLoan a owl:Class ;
+    rdfs:subClassOf bc:PersonalLoan ;
+    rdfs:label "信用贷款"@zh, "Credit Loan"@en ;
+    skos:altLabel "无抵押贷款"@zh ;
+    skos:definition "基于借款人信用而非抵押物发放的个人贷款，对信用评估要求较高。"@zh ;
+    skos:definition "A personal loan granted on the borrower's creditworthiness rather than collateral, requiring a strong credit assessment."@en ;
+    skos:editorialNote "Public generic definition authored for the MVP demo; not internal bank documentation."@en .
+
+###############################################################################
+# Wealth management (理财产品 → 现金管理类 / 固收类)
+###############################################################################
+
+bc:WealthManagementProduct a owl:Class ;
+    rdfs:subClassOf bc:Product ;
+    rdfs:label "理财产品"@zh, "Wealth Management Product"@en ;
+    skos:altLabel "银行理财"@zh ;
+    skos:definition "银行或其理财子公司发行、按约定投资运作并使投资者按约获得收益的资产管理产品。"@zh ;
+    skos:definition "An asset-management product issued by a bank or its wealth-management subsidiary, invested per its terms to return earnings to investors as agreed."@en ;
+    skos:editorialNote "Public generic definition authored for the MVP demo; not internal bank documentation."@en .
+
+bc:CashManagementProduct a owl:Class ;
+    rdfs:subClassOf bc:WealthManagementProduct ;
+    rdfs:label "现金管理类产品"@zh, "Cash Management Product"@en ;
+    skos:definition "流动性高、风险低、近似货币基金的开放式理财产品。"@zh ;
+    skos:definition "An open-ended wealth-management product with high liquidity and low risk, similar in character to a money-market fund."@en ;
+    skos:editorialNote "Public generic definition authored for the MVP demo; not internal bank documentation."@en .
+
+bc:FixedIncomeWealthProduct a owl:Class ;
+    rdfs:subClassOf bc:WealthManagementProduct ;
+    rdfs:label "固收类理财产品"@zh, "Fixed-Income Wealth Management Product"@en ;
+    skos:altLabel "固收类理财"@zh ;
+    skos:definition "主要投资于债券等固定收益类资产的理财产品。"@zh ;
+    skos:definition "A wealth-management product that invests mainly in fixed-income assets such as bonds."@en ;
+    skos:editorialNote "Public generic definition authored for the MVP demo; not internal bank documentation."@en .
+
+###############################################################################
+# Account hierarchy (账户 → 储蓄账户 / 结算账户)
+###############################################################################
+
+bc:SavingsAccount a owl:Class ;
+    rdfs:subClassOf bc:Account ;
+    rdfs:label "储蓄账户"@zh, "Savings Account"@en ;
+    skos:definition "以储蓄存款为目的开立的账户，用于管理客户的存款资金。"@zh ;
+    skos:definition "An account opened for savings purposes, used to manage a customer's deposit funds."@en ;
+    skos:editorialNote "Public generic definition authored for the MVP demo; not internal bank documentation."@en .
+
+bc:SettlementAccount a owl:Class ;
+    rdfs:subClassOf bc:Account ;
+    rdfs:label "结算账户"@zh, "Settlement Account"@en ;
+    skos:altLabel "结算户"@zh, "current account"@en ;
+    skos:definition "用于日常资金收付、转账与结算的银行账户，常见于对公客户。"@zh ;
+    skos:definition "A bank account used for day-to-day receipts, payments, transfers and clearing, commonly held by corporate customers."@en ;
+    skos:editorialNote "Public generic definition authored for the MVP demo; not internal bank documentation."@en .
+
+###############################################################################
+# Party hierarchy (主体 → 银行 / 零售客户 / 对公客户)
+###############################################################################
+
+bc:Bank a owl:Class ;
+    rdfs:subClassOf bc:Party ;
+    rdfs:label "银行"@zh, "Bank"@en ;
+    skos:definition "依法设立的、主要经营存贷款与支付结算等业务的金融机构。"@zh ;
+    skos:definition "A financial institution duly established to conduct deposit-taking, lending and payment and settlement business."@en ;
+    skos:editorialNote "Public generic definition authored for the MVP demo; not internal bank documentation."@en .
+
+bc:RetailCustomer a owl:Class ;
+    rdfs:subClassOf bc:Party ;
+    rdfs:label "零售客户"@zh, "Retail Customer"@en ;
+    skos:altLabel "个人客户"@zh ;
+    skos:definition "以个人身份与银行发生业务往来的客户。"@zh ;
+    skos:definition "A customer who deals with the bank in a personal capacity."@en ;
+    skos:editorialNote "Public generic definition authored for the MVP demo; not internal bank documentation."@en .
+
+bc:CorporateCustomer a owl:Class ;
+    rdfs:subClassOf bc:Party ;
+    rdfs:label "对公客户"@zh, "Corporate Customer"@en ;
+    skos:altLabel "企业客户"@zh ;
+    skos:definition "以企业或机构身份与银行发生业务往来的客户。"@zh ;
+    skos:definition "A customer who deals with the bank as a business or institution."@en ;
+    skos:editorialNote "Public generic definition authored for the MVP demo; not internal bank documentation."@en .
+
+###############################################################################
+# Properties
+###############################################################################
+
+bc:offeredBy a owl:ObjectProperty ;
+    rdfs:label "提供机构"@zh, "Offered by"@en ;
+    rdfs:domain bc:Product ;
+    rdfs:range bc:Party ;
+    skos:definition "产品由哪一主体提供。"@zh ;
+    skos:definition "The party that offers a product."@en .
+
+bc:supportsProduct a owl:ObjectProperty ;
+    rdfs:label "支持的产品"@zh, "Supports product"@en ;
+    rdfs:domain bc:Account ;
+    rdfs:range bc:Product ;
+    skos:definition "账户可用于承载或关联的产品。"@zh ;
+    skos:definition "A product that an account can host or be associated with."@en .
+
+bc:termMonths a owl:DatatypeProperty ;
+    rdfs:label "期限（月）"@zh, "Term (months)"@en ;
+    rdfs:domain bc:Product ;
+    rdfs:range xsd:integer ;
+    skos:definition "产品或融资安排的期限，以月为单位。"@zh ;
+    skos:definition "The term of a product or financing arrangement, in months."@en .
+
+bc:minimumAmount a owl:DatatypeProperty ;
+    rdfs:label "最低金额"@zh, "Minimum amount"@en ;
+    rdfs:domain bc:Product ;
+    rdfs:range xsd:decimal ;
+    skos:definition "购买或存入该产品所需的最低金额。"@zh ;
+    skos:definition "The minimum amount required to purchase or deposit into a product."@en .
+
+bc:interestRate a owl:DatatypeProperty ;
+    rdfs:label "利率（%）"@zh, "Interest rate (%)"@en ;
+    rdfs:domain bc:Product ;
+    rdfs:range xsd:decimal ;
+    skos:definition "产品的利率，以百分比数值表示（如 1.45 表示 1.45%）。"@zh ;
+    skos:definition "The interest rate of a product expressed as a percentage value (e.g. 1.45 means 1.45%)."@en .
+
+bc:annualizedReturn a owl:DatatypeProperty ;
+    rdfs:label "年化收益率（%）"@zh, "Annualized return (%)"@en ;
+    rdfs:domain bc:Product ;
+    rdfs:range xsd:decimal ;
+    skos:definition "理财产品按年折算的收益率，以百分比数值表示。"@zh ;
+    skos:definition "The annualized return of a wealth-management product, as a percentage value."@en .
+
+bc:riskLevel a owl:DatatypeProperty ;
+    rdfs:label "风险等级"@zh, "Risk level"@en ;
+    rdfs:domain bc:Product ;
+    rdfs:range xsd:string ;
+    skos:definition "产品的风险等级定性描述（低/中/高）。"@zh ;
+    skos:definition "Qualitative risk level of a product (low/medium/high)."@en .
+
+bc:liquidity a owl:DatatypeProperty ;
+    rdfs:label "流动性"@zh, "Liquidity"@en ;
+    rdfs:domain bc:Product ;
+    rdfs:range xsd:string ;
+    skos:definition "产品资金的流动便利程度（高/中/低）。"@zh ;
+    skos:definition "How easily funds in a product can be accessed (high/medium/low)."@en .
+
+bc:depositInsuranceCovered a owl:DatatypeProperty ;
+    rdfs:label "存款保险保障"@zh, "Deposit-insurance covered"@en ;
+    rdfs:domain bc:Deposit ;
+    rdfs:range xsd:boolean ;
+    skos:definition "该存款是否受存款保险制度保障。"@zh ;
+    skos:definition "Whether the deposit is covered by the deposit-insurance scheme."@en .
+
+###############################################################################
+# Annotation properties
+###############################################################################
+
+bc:alignedToFibo a owl:AnnotationProperty ;
+    rdfs:label "对齐至 FIBO 术语"@zh, "Aligned to FIBO term"@en ;
+    skos:definition "声明本类与某个 FIBO（金融业业务本体）术语之间的术语对齐；仅为注释，不引入 FIBO 本体。"@zh ;
+    skos:definition "Declares a terminology alignment between this class and a FIBO (Financial Industry Business Ontology) term; annotation only, never imports FIBO."@en .

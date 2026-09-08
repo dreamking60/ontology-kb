@@ -1,0 +1,30 @@
+@prefix bc:  <https://ontology.example/banking-core#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+###############################################################################
+# FIBO alignment annotations (annotation only — FIBO is never imported).
+# Term IRIs below follow the https://spec.edmcouncil.org/fibo/ontology/
+# pattern; exact module paths are best-effort for the MVP and MUST be
+# verified against the current FIBO 2.0 release before production use.
+# See docs/fibo-alignment.md for the human-readable mapping table.
+###############################################################################
+
+bc:Deposit
+    bc:alignedToFibo <https://spec.edmcouncil.org/fibo/ontology/FND/ProductsAndServices/FinancialProductsAndServices/Deposit> .
+
+bc:DemandDeposit
+    bc:alignedToFibo <https://spec.edmcouncil.org/fibo/ontology/FND/ProductsAndServices/FinancialProductsAndServices/Deposit> .
+
+bc:TimeDeposit
+    bc:alignedToFibo <https://spec.edmcouncil.org/fibo/ontology/FND/ProductsAndServices/FinancialProductsAndServices/Deposit> .
+
+bc:CertificateOfDeposit
+    bc:alignedToFibo <https://spec.edmcouncil.org/fibo/ontology/FND/ProductsAndServices/FinancialProductsAndServices/Deposit> .
+
+bc:Loan
+    bc:alignedToFibo <https://spec.edmcouncil.org/fibo/ontology/FND/ProductsAndServices/FinancialProductsAndServices/Loan> .
+
+bc:HousingLoan
+    bc:alignedToFibo <https://spec.edmcouncil.org/fibo/ontology/FND/ProductsAndServices/FinancialProductsAndServices/Loan> .

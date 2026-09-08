@@ -1,0 +1,137 @@
+@prefix bc:  <https://ontology.example/banking-core#> .
+@prefix ex:  <https://ontology.example/seed#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+###############################################################################
+# Curated seed corpus for the banking-concept-kb-mvp demo.
+# All content is public and generic; nothing here is internal bank data.
+# Provenance: each individual carries a skos:editorialNote marker.
+###############################################################################
+
+ex:DemoShortTermDeposit a bc:TimeDeposit ;
+    rdfs:label "示例一年期定期存款"@zh, "Example 1-year time deposit"@en ;
+    skos:definition "演示用一年期定期存款（公开通用示例数据，单位为人民币元）。"@zh ;
+    skos:definition "Demo one-year time deposit (public generic sample data; amounts in CNY)."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en ;
+    bc:termMonths 12 ;
+    bc:minimumAmount 50 ;
+    bc:interestRate 1.45 ;
+    bc:riskLevel "低" ;
+    bc:liquidity "中" ;
+    bc:depositInsuranceCovered true ;
+    bc:offeredBy ex:SampleBank .
+
+ex:DemoLongTermDeposit a bc:TimeDeposit ;
+    rdfs:label "示例十年期定期存款"@zh, "Example 10-year time deposit"@en ;
+    skos:definition "演示用长期定期存款（公开通用示例数据，期限 120 个月，用于触发长期定期存款演示规则）。"@zh ;
+    skos:definition "Demo long-term time deposit (public generic sample data; 120-month term, used to trigger the long-term deposit demo rule)."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en ;
+    bc:termMonths 120 ;
+    bc:minimumAmount 50 ;
+    bc:interestRate 2.75 ;
+    bc:riskLevel "低" ;
+    bc:liquidity "低" ;
+    bc:depositInsuranceCovered true ;
+    bc:offeredBy ex:SampleBank .
+
+ex:DemoCertificateOfDeposit a bc:CertificateOfDeposit ;
+    rdfs:label "示例大额存单"@zh, "Example certificate of deposit"@en ;
+    skos:definition "演示用大额存单（公开通用示例数据，起存金额 200000 元、期限 36 个月）。"@zh ;
+    skos:definition "Demo certificate of deposit (public generic sample data; 200000 CNY minimum, 36-month term)."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en ;
+    bc:termMonths 36 ;
+    bc:minimumAmount 200000 ;
+    bc:interestRate 2.6 ;
+    bc:riskLevel "低" ;
+    bc:liquidity "低" ;
+    bc:depositInsuranceCovered true ;
+    bc:offeredBy ex:SampleBank .
+
+ex:DemoDemandDeposit a bc:DemandDeposit ;
+    rdfs:label "示例活期存款"@zh, "Example demand deposit"@en ;
+    skos:definition "演示用活期存款（公开通用示例数据，随存随取、流动性高）。"@zh ;
+    skos:definition "Demo demand deposit (public generic sample data; withdrawable anytime, high liquidity)."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en ;
+    bc:riskLevel "低" ;
+    bc:liquidity "高" ;
+    bc:depositInsuranceCovered true ;
+    bc:offeredBy ex:SampleBank .
+
+ex:DemoHousingLoan a bc:HousingLoan ;
+    rdfs:label "示例住房贷款"@zh, "Example housing loan"@en ;
+    skos:definition "演示用住房贷款（公开通用示例数据，期限 360 个月、浮动利率）。"@zh ;
+    skos:definition "Demo housing loan (public generic sample data; 360-month term, floating rate)."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en ;
+    bc:termMonths 360 ;
+    bc:interestRate 3.1 ;
+    bc:riskLevel "中" ;
+    bc:liquidity "低" ;
+    bc:offeredBy ex:SampleBank .
+
+ex:DemoCreditLoan a bc:CreditLoan ;
+    rdfs:label "示例个人信用贷款"@zh, "Example personal credit loan"@en ;
+    skos:definition "演示用个人信用贷款（公开通用示例数据，无抵押、利率较高）。"@zh ;
+    skos:definition "Demo personal credit loan (public generic sample data; unsecured, higher rate)."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en ;
+    bc:termMonths 60 ;
+    bc:interestRate 4.2 ;
+    bc:riskLevel "高" ;
+    bc:liquidity "低" ;
+    bc:offeredBy ex:SampleBank .
+
+ex:DemoCashManagement a bc:CashManagementProduct ;
+    rdfs:label "示例现金管理类产品"@zh, "Example cash-management product"@en ;
+    skos:definition "演示用现金管理类理财产品（公开通用示例数据，类货币基金、高流动性）。"@zh ;
+    skos:definition "Demo cash-management wealth product (public generic sample data; money-market-like, high liquidity)."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en ;
+    bc:annualizedReturn 1.9 ;
+    bc:riskLevel "低" ;
+    bc:liquidity "高" ;
+    bc:minimumAmount 1 ;
+    bc:offeredBy ex:SampleBank .
+
+ex:DemoFixedIncome a bc:FixedIncomeWealthProduct ;
+    rdfs:label "示例固收类理财产品"@zh, "Example fixed-income wealth product"@en ;
+    skos:definition "演示用固收类理财产品（公开通用示例数据，主要投资债券）。"@zh ;
+    skos:definition "Demo fixed-income wealth product (public generic sample data; invests mainly in bonds)."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en ;
+    bc:annualizedReturn 3.0 ;
+    bc:riskLevel "中" ;
+    bc:liquidity "中" ;
+    bc:minimumAmount 10000 ;
+    bc:offeredBy ex:SampleBank .
+
+ex:DemoSavingsAccount a bc:SavingsAccount ;
+    rdfs:label "示例储蓄账户"@zh, "Example savings account"@en ;
+    skos:definition "演示用储蓄账户（公开通用示例数据），可承载定期类存款产品。"@zh ;
+    skos:definition "Demo savings account (public generic sample data) that can host term deposit products."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en ;
+    bc:supportsProduct ex:DemoShortTermDeposit, ex:DemoLongTermDeposit .
+
+ex:DemoSettlementAccount a bc:SettlementAccount ;
+    rdfs:label "示例结算账户"@zh, "Example settlement account"@en ;
+    skos:definition "演示用结算账户（公开通用示例数据），用于日常资金收付与结算。"@zh ;
+    skos:definition "Demo settlement account (public generic sample data) used for day-to-day payments and clearing."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en ;
+    bc:supportsProduct ex:DemoDemandDeposit .
+
+ex:SampleBank a bc:Bank ;
+    rdfs:label "示例商业银行"@zh, "Sample commercial bank"@en ;
+    skos:definition "演示用的通用商业银行主体（非真实机构，公开通用示例数据）。"@zh ;
+    skos:definition "A generic commercial-bank party used for the demo (not a real institution; public generic sample data)."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en .
+
+ex:SampleRetailCustomer a bc:RetailCustomer ;
+    rdfs:label "示例零售客户"@zh, "Sample retail customer"@en ;
+    skos:definition "演示用的零售（个人）客户主体。"@zh ;
+    skos:definition "A retail (personal) customer party used for the demo."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en .
+
+ex:SampleCorporateCustomer a bc:CorporateCustomer ;
+    rdfs:label "示例对公客户"@zh, "Sample corporate customer"@en ;
+    skos:definition "演示用的对公（企业）客户主体。"@zh ;
+    skos:definition "A corporate customer party used for the demo."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en .
