@@ -69,11 +69,47 @@ Optional satisfiability gate:
 make check-consistency   # HermiT via owlready2 (Java present → [OK] …)
 ```
 
-## 5. Validation & acceptance
+## 5. RAG question answering (specs/rag-question-answering)
+
+No-key mode first (deterministic fallback — always works):
+
+```bash
+curl -s -X POST http://127.0.0.1:8000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"question": "大额存单和定期存款有什么区别？"}' | python3 -m json.tool
+# expect: mode=fallback, citations include 定期存款/大额存单, answer summarizes both
+
+curl -s -X POST http://127.0.0.1:8000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"question": "腾讯股价最近怎么样？"}' | python3 -m json.tool
+# expect: mode=fallback, citations=[], answer explains 知识库未找到 (no fabrication)
+
+curl -si -X POST http://127.0.0.1:8000/api/chat \
+  -H "Content-Type: application/json" -d '{"question": "   "}' | head -1
+# expect: HTTP/1.1 422 (empty question rejected, LLM not called)
+```
+
+LLM mode (optional; configure `.env`-style exports first — see README):
+
+```bash
+export BANKING_KB_LLM_BASE_URL=https://api.deepseek.com/v1
+export BANKING_KB_LLM_API_KEY=sk-...   # never commit
+export BANKING_KB_LLM_MODEL=deepseek-chat
+make api   # restart the server so the env is picked up
+curl -s -X POST http://127.0.0.1:8000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"question": "信用贷款和住房贷款有什么区别？"}' | python3 -m json.tool
+# expect: mode=llm, synthesized answer with citations to 信用贷款/住房贷款
+```
+
+In the UI, open the **💬 智能问答** tab and chat; sources and mode are shown
+under each assistant message.
+
+## 6. Validation & acceptance
 
 ```bash
 make test
-openspec validate --changes banking-concept-kb-mvp --strict
+openspec validate --changes rag-concept-qa --strict
 ```
 
 All spec scenarios have matching pytest tests; the change must stay green before

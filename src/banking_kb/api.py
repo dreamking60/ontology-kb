@@ -10,11 +10,13 @@ POST /api/reasoning/demo    — provenance-tagged reasoning demo
 """
 from __future__ import annotations
 
+from typing import Literal
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
-from . import reasoning
+from . import rag, reasoning
 from .kb import KnowledgeBase
 from .search import search
 
@@ -36,6 +38,24 @@ app.add_middleware(
 
 class ReasoningRequest(BaseModel):
     """Placeholder body for POST /api/reasoning/demo (no parameters today)."""
+
+
+class ChatMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str
+
+
+class ChatRequest(BaseModel):
+    question: str
+    history: list[ChatMessage] | None = None
+
+    @field_validator("question")
+    @classmethod
+    def question_not_blank(cls, value: str) -> str:
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("question must not be empty")
+        return value
 
 
 @app.get("/api/health")
@@ -68,3 +88,14 @@ def tree() -> dict:
 @app.post("/api/reasoning/demo")
 def reasoning_demo(_: ReasoningRequest | None = None) -> dict:
     return reasoning.run_reasoning_demo(kb)
+
+
+@app.post("/api/chat")
+def chat(request: ChatRequest) -> dict:
+    """RAG question answering over the knowledge base (specs/rag-question-answering)."""
+    history = (
+        [{"role": m.role, "content": m.content} for m in request.history]
+        if request.history
+        else None
+    )
+    return rag.answer_question(kb, request.question, history=history)

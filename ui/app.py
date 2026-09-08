@@ -42,6 +42,16 @@ def _post(path: str) -> dict | None:
         return None
 
 
+def _post_json(path: str, payload: dict) -> dict | None:
+    try:
+        resp = requests.post(f"{API}{path}", json=payload, timeout=60)
+        resp.raise_for_status()
+        return resp.json()
+    except requests.RequestException as exc:
+        st.error(f"无法连接 API（{API}）：{exc}\n请先运行 `make api`。")
+        return None
+
+
 def prefixed(iri: str) -> str:
     """bc:xxx / ex:xxx form of an IRI, for path parameters."""
     for prefix, ns in (("bc", "https://ontology.example/banking-core#"),
@@ -80,7 +90,48 @@ def render_detail(detail: dict) -> None:
 
 
 # --------------------------------------------------------------------------- #
-search_tab, browse_tab, reason_tab = st.tabs(["🔎 语义搜索", "🌳 概念浏览", "🧠 推理演示"])
+chat_tab, search_tab, browse_tab, reason_tab = st.tabs(
+    ["💬 智能问答", "🔎 语义搜索", "🌳 概念浏览", "🧠 推理演示"]
+)
+
+with chat_tab:
+    st.markdown(
+        "基于知识库的 **RAG 问答**：回答只引用本体收录的概念（存款/贷款/理财/账户…）。"
+        "未配置 LLM（`BANKING_KB_LLM_*`）时自动降级为确定性摘要（mode=fallback）。"
+    )
+    if "chat_messages" not in st.session_state:
+        st.session_state.chat_messages = []
+    for message in st.session_state.chat_messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+            if message.get("meta"):
+                st.caption(message["meta"])
+    prompt = st.chat_input("问知识库…（例如：大额存单和定期存款有什么区别？）")
+    if prompt and prompt.strip():
+        st.session_state.chat_messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
+        history = [
+            {"role": m["role"], "content": m["content"]}
+            for m in st.session_state.chat_messages[-6:-1]
+        ]
+        with st.chat_message("assistant"):
+            with st.spinner("检索知识库并生成回答…"):
+                body = _post_json("/api/chat", {"question": prompt, "history": history})
+            if body is None:
+                st.session_state.chat_messages.pop()
+            else:
+                st.markdown(body["answer"])
+                mode_icon = "🟢 LLM" if body["mode"] == "llm" else "🟡 摘要(fallback)"
+                meta_parts = [f"模式：{mode_icon}"]
+                if body["citations"]:
+                    names = "、".join(c["label"] for c in body["citations"])
+                    meta_parts.append(f"引用概念：{names}")
+                meta = " · ".join(meta_parts)
+                st.caption(meta)
+                st.session_state.chat_messages.append(
+                    {"role": "assistant", "content": body["answer"], "meta": meta}
+                )
 
 with search_tab:
     query = st.text_input("搜索概念（支持中文/英文标签与同义词）", placeholder="例如：存款 / 定存 / 按揭 / deposit")

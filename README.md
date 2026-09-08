@@ -13,10 +13,12 @@ class hierarchy, and watch OWL reasoning derive facts with full provenance.
 - **FIBO alignment by annotation only**: `ontology/fibo-alignment.ttl` maps
   selected classes to FIBO terms; FIBO itself is never imported.
 - **Semantic search** with hierarchy expansion and synonym matching
-  (specs/concept-search), **tree browser** (specs/concept-browser), and a
+  (specs/concept-search), **tree browser** (specs/concept-browser), a
   **reasoning demo** with `asserted` / `inferred` / `rule-derived` provenance
-  (specs/reasoning-demo).
-- **No LLM/RAG in this phase** — a later OpenSpec change adds it.
+  (specs/reasoning-demo), and **RAG question answering** (specs/rag-question-answering):
+  natural-language questions over the concept KB with citations, plus a
+  deterministic fallback when no LLM is configured.
+- **No LLM required for the base demo** — chat degrades gracefully (`mode=fallback`).
 
 ## Quick start
 
@@ -33,7 +35,31 @@ Optional: `make check-consistency` runs a HermiT satisfiability gate
 
 Try: search 存款, 定存, 按揭, `deposit`; browse 产品 → 存款 → 定期存款 → 大额存单;
 run the reasoning demo to see 示例十年期定期存款 classified as
-长期定期存款（演示分类）by the demo rule.
+长期定期存款（演示分类）by the demo rule. Then open the **智能问答** tab and ask
+"大额存单和定期存款有什么区别？" or "什么是信用贷款？".
+
+## RAG question answering (chat)
+
+`POST /api/chat` answers natural-language questions **grounded in the concept
+knowledge base** — the answer cites the source concepts it used, and questions
+with no matching content get an explicit "not found" response instead of a
+made-up answer.
+
+**Without an LLM key** the endpoint still answers via a deterministic retrieval
+summary (`"mode": "fallback"`). To enable synthesized answers, export an
+OpenAI-compatible endpoint (see `.env.example`):
+
+```bash
+export BANKING_KB_LLM_BASE_URL=https://api.deepseek.com/v1   # or any compatible URL
+export BANKING_KB_LLM_API_KEY=sk-...                          # never commit this
+export BANKING_KB_LLM_MODEL=deepseek-chat
+make api
+```
+
+> ⚠️ Configuring a key makes the demo **call an external service** with prompt
+> text derived from the knowledge base — review data-exit policy before using a
+> cloud endpoint in a bank environment. When the call fails, chat degrades to
+> `mode=fallback` instead of erroring.
 
 ## Repository layout
 
@@ -61,6 +87,7 @@ it explicitly with `make load-internal`. See `docs/internal-import.md`.
 - `GET /api/tree` — class-hierarchy browse tree
 - `GET /api/concepts/{id}` — detail for `Deposit`, `bc:Loan`, `DemoHousingLoan`, …
 - `POST /api/reasoning/demo` — provenance-tagged reasoning facts
+- `POST /api/chat` — RAG question answering `{question, history?}` → `{answer, mode, citations, context, retrieval_summary}`
 
 ## Development loop
 
