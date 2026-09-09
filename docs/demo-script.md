@@ -1,4 +1,4 @@
-# Demo Script — banking-concept-kb-mvp
+# Demo Script — banking concept knowledge base (chat-frontend)
 
 End-to-end walkthrough of the MVP demo, mirroring the OpenSpec spec scenarios.
 
@@ -9,14 +9,25 @@ make setup
 make load        # expect: Loaded 3 file(s): <n> triples, <c> classes, <i> individuals.
 ```
 
-## 1. Start the servers (two terminals)
+## 1. Start the server (one terminal)
 
 ```bash
-make api         # http://127.0.0.1:8000  (FastAPI, docs at /docs)
-make ui          # http://127.0.0.1:8501  (Streamlit)
+make api          # http://127.0.0.1:8000 — API + web UI (docs at /docs)
 ```
 
-## 2. Semantic search (specs/concept-search)
+Open **http://127.0.0.1:8000** in a browser — the LLM-chat web app loads.
+
+## 2. Web UI tour (specs/chat-interface)
+
+- **💬 AI 对话** — chat like an LLM product: bubbles + markdown, mode badge
+  (🤖 Agent / 🟢 LLM / 🟡 检索摘要), citation chips, empty-state suggestions.
+  Without any LLM configured the sidebar chip reads 「未配置 LLM · 摘要模式」and
+  every answer still works as a deterministic retrieval summary (fallback).
+- **⚙️ 设置** — configure Base URL / API Key / Model in-app (runtime only,
+  masked reads) and watch the status chip turn green; answers then stream.
+- **🔎 概念探索** / **🧠 推理演示** — search/tree/detail and the reasoner.
+
+## 3. Semantic search (specs/concept-search)
 
 ```bash
 curl -s "http://127.0.0.1:8000/api/concepts?q=%E5%AE%9A%E5%AD%98" | python3 -m json.tool | head -40
@@ -33,7 +44,7 @@ curl -si "http://127.0.0.1:8000/api/concepts?q=zzz%E4%B8%8D%E5%AD%98%E5%9C%A8" |
 # → HTTP/1.1 200 with {"count": 0, "results": []} (no-match is not an error)
 ```
 
-## 3. Concept browser (specs/concept-browser)
+## 4. Concept browser (specs/concept-browser)
 
 ```bash
 curl -s http://127.0.0.1:8000/api/tree | python3 -m json.tool | head -30
@@ -46,9 +57,9 @@ curl -s http://127.0.0.1:8000/api/concepts/DemoHousingLoan | python3 -m json.too
 # attributes (期限/利率/风险等级…) + relationship 提供机构 → 示例商业银行
 ```
 
-In the UI: open the 概念浏览 tab and expand the tree, then select a concept.
+In the UI: open **🔎 概念探索**, expand the tree, select a concept to see its detail.
 
-## 4. Reasoning demo (specs/reasoning-demo)
+## 5. Reasoning demo (specs/reasoning-demo)
 
 ```bash
 curl -s -X POST http://127.0.0.1:8000/api/reasoning/demo | python3 -m json.tool
@@ -69,7 +80,7 @@ Optional satisfiability gate:
 make check-consistency   # HermiT via owlready2 (Java present → [OK] …)
 ```
 
-## 5. RAG question answering (specs/rag-question-answering)
+## 6. RAG question answering (specs/rag-question-answering)
 
 No-key mode first (deterministic fallback — always works):
 
@@ -102,10 +113,12 @@ curl -s -X POST http://127.0.0.1:8000/api/chat \
 # expect: mode=llm, synthesized answer with citations to 信用贷款/住房贷款
 ```
 
-In the UI, open the **💬 智能问答** tab and chat; sources and mode are shown
-under each assistant message.
+In the UI, chat in the **💬 AI 对话** view; mode badges and citation chips are shown
+under each assistant message. With an LLM configured the UI consumes
+`/api/chat/stream` and renders answers progressively; without one it still works
+in fallback mode (see section 2).
 
-## 6. Agent mode (specs/agentic-question-answering)
+## 7. Agent mode (specs/agentic-question-answering)
 
 No-key mode (deterministic fallback — same grounding, no tools):
 
@@ -133,14 +146,14 @@ curl -s -X POST http://127.0.0.1:8000/api/agent/chat \
 If the configured model rejects `tools`, the endpoint transparently returns
 `mode=llm` (phase-2 RAG synthesis). Read-only guarantees: the SPARQL tool only
 accepts `SELECT`/`ASK`; `INSERT`/`DELETE`/`LOAD`/`CLEAR` return a read-only
-error and the dataset is never changed. In the UI, enable the **🤖 Agent 模式**
-toggle and open the 执行轨迹 expander to inspect each step.
+error and the dataset is never changed. In the UI, switch to **🤖 Agent 工具模式** in the **💬 AI 对话** view; the tool
+execution timeline is streamed and shown per answer.
 
-## 7. Validation & acceptance
+## 8. Validation & acceptance
 
 ```bash
 make test
-openspec validate --changes agentic-qa-assistant --strict
+openspec validate --changes chat-frontend --strict
 ```
 
 All spec scenarios have matching pytest tests; the change must stay green before

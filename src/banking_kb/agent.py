@@ -1,17 +1,21 @@
 """Bounded, tool-calling question-answering agent over the concept KB
-(specs/agentic-question-answering, design.md D1/D4/D5).
+(specs/agentic-question-answering, specs/chat-interface, design.md D4).
 
-The agent lets an OpenAI-compatible LLM call read-only KB tools iteratively,
-then synthesizes a grounded final answer. Degradation ladder:
+:func:`stream_agent` is the single implementation: it yields SSE-style event
+dicts as the loop runs (``step`` per executed tool, ``delta`` text, ``citations``,
+``done``). :func:`run_agent_question` is a thin wrapper that collects the events
+into the legacy one-shot response dict, so both the old contract and the new
+streaming frontend share one code path.
 
-1. tools request succeeds          -> mode ``agent``
-2. endpoint rejects ``tools``      -> phase-2 single-turn RAG synthesis (mode ``llm``)
-3. no LLM configured / call fails  -> deterministic retrieval summary (mode ``fallback``)
+Degradation ladder (unchanged):
+1. tools request succeeds         -> mode ``agent``
+2. endpoint rejects ``tools``     -> phase-2 single-turn RAG synthesis (mode ``llm``)
+3. no LLM configured / call fails -> deterministic retrieval summary (mode ``fallback``)
 """
 from __future__ import annotations
 
 import json
-from typing import Optional
+from typing import Iterator, Optional
 
 from . import llm, rag
 from . import tools as kb_tools
@@ -49,15 +53,18 @@ def _merge_citations(citations: list[dict], seen: set[str], items: list[dict]) -
             citations.append(item)
 
 
-def run_agent_question(
+def stream_agent(
     kb: KnowledgeBase,
     question: str,
     history: Optional[list[dict]] = None,
     config: Optional[llm.LLMConfig] = None,
     http=None,
     max_turns: Optional[int] = None,
-) -> dict:
-    """Answer *question* through the agent loop; returns the /api/agent/chat contract."""
+) -> Iterator[dict]:
+    """Run the agent loop, yielding one event dict per outcome type.
+
+    Event types: ``meta``, ``mode``, ``step``, ``delta``, ``citations``, ``done``.
+    """
     budget = max_turns or MAX_AGENT_TURNS
     registry = kb_tools.build_tools(kb)
     schemas = kb_tools.tool_schemas(registry)
@@ -67,16 +74,33 @@ def run_agent_question(
     seen: set[str] = set()
     trace: list[dict] = []
 
+    def emit_done(mode: str, termination: Optional[str] = None) -> Iterator[dict]:
+        term = termination or (
+            "final"
+            if mode == "agent"
+            else ("no_llm" if not cfg else "tools_unavailable")
+        )
+        yield {
+            "type": "done",
+            "mode": mode,
+            "citations": list(citations),
+            "trace": list(trace),
+            "retrieval_summary": {
+                "tool_calls": len(trace),
+                "budget": budget,
+                "termination": term,
+            },
+        }
+
     if cfg is None:
         resp = rag.answer_question(kb, question, history=history)
-        return {
-            "answer": resp["answer"],
-            "mode": "fallback",
-            "citations": resp["citations"],
-            "trace": [],
-            "retrieval_summary": {**resp["retrieval_summary"], "tool_calls": 0,
-                                  "termination": "no_llm"},
-        }
+        yield {"type": "meta", "mode": "fallback"}
+        yield {"type": "delta", "text": resp["answer"]}
+        yield {"type": "citations", "citations": resp["citations"]}
+        yield {"type": "done", "mode": "fallback", "citations": resp["citations"],
+               "trace": [], "retrieval_summary": {**resp["retrieval_summary"],
+                                                  "tool_calls": 0, "termination": "no_llm"}}
+        return
 
     messages: list[dict] = [{"role": "system", "content": _SYSTEM_PROMPT}]
     messages += _history_messages(history)
@@ -87,26 +111,23 @@ def run_agent_question(
         if turn is None:
             # tools unsupported (or endpoint failure) -> single-turn RAG synthesis
             resp = rag.answer_question(kb, question, history=history, config=cfg, http=http)
-            return {
-                "answer": resp["answer"],
-                "mode": resp["mode"],
-                "citations": resp["citations"],
-                "trace": [],
-                "retrieval_summary": {**resp["retrieval_summary"], "tool_calls": 0,
-                                      "termination": "tools_unavailable"},
-            }
+            yield {"type": "meta", "mode": resp["mode"]}
+            yield {"type": "delta", "text": resp["answer"]}
+            yield {"type": "citations", "citations": resp["citations"]}
+            yield {"type": "done", "mode": resp["mode"], "citations": resp["citations"],
+                   "trace": [], "retrieval_summary": {**resp["retrieval_summary"],
+                                                      "tool_calls": 0,
+                                                      "termination": "tools_unavailable"}}
+            return
         if not turn.has_tool_calls:
             content = (turn.content or "").strip()
             if not content:
                 content = "（模型未返回可显示的回答。）"
-            return {
-                "answer": content,
-                "mode": "agent",
-                "citations": citations,
-                "trace": trace,
-                "retrieval_summary": {"tool_calls": len(trace), "budget": budget,
-                                      "termination": "final"},
-            }
+            yield {"type": "meta", "mode": "agent"}
+            yield {"type": "delta", "text": content}
+            yield {"type": "citations", "citations": list(citations)}
+            yield from emit_done("agent")
+            return
         assistant_message: dict = {"role": "assistant", "content": turn.content}
         assistant_message["tool_calls"] = [
             {
@@ -128,23 +149,44 @@ def run_agent_question(
             except KeyError as exc:
                 text, tool_citations = f"[工具错误] {exc}", []
             _merge_citations(citations, seen, tool_citations)
-            trace.append(
-                {
-                    "step": len(trace) + 1,
-                    "tool": call.name,
-                    "arguments": (call.arguments or "")[:300],
-                    "summary": text[:500],
-                }
-            )
+            step = {
+                "step": len(trace) + 1,
+                "tool": call.name,
+                "arguments": (call.arguments or "")[:300],
+                "summary": text[:500],
+            }
+            trace.append(step)
+            yield {"type": "step", **step}
             messages.append({"role": "tool", "tool_call_id": call.id, "content": text})
 
     steps = "；".join(f"第{t['step']}步：{t['tool']}" for t in trace) or "（未执行任何工具）"
+    content = f"在规定的 {budget} 步工具调用上限内未能完成回答。{steps}。" \
+              "请拆分问题或补充更多信息后重试。"
+    yield {"type": "meta", "mode": "agent"}
+    yield {"type": "delta", "text": content}
+    yield {"type": "citations", "citations": list(citations)}
+    yield from emit_done("agent", termination="budget_exhausted")
+
+
+def run_agent_question(
+    kb: KnowledgeBase,
+    question: str,
+    history: Optional[list[dict]] = None,
+    config: Optional[llm.LLMConfig] = None,
+    http=None,
+    max_turns: Optional[int] = None,
+) -> dict:
+    """Answer *question* through the agent loop (one-shot response contract)."""
+    events = list(stream_agent(kb, question, history=history, config=config, http=http,
+                               max_turns=max_turns))
+    text = "".join(e.get("text", "") for e in events if e.get("type") == "delta")
+    trace = [e for e in events if e.get("type") == "step"]
+    done = next(e for e in events if e.get("type") == "done")
+    citations_event = next((e for e in events if e.get("type") == "citations"), None)
     return {
-        "answer": f"在规定的 {budget} 步工具调用上限内未能完成回答。{steps}。"
-                  "请拆分问题或补充更多信息后重试。",
-        "mode": "agent",
-        "citations": citations,
+        "answer": text,
+        "mode": done["mode"],
+        "citations": (citations_event or done)["citations"],
         "trace": trace,
-        "retrieval_summary": {"tool_calls": len(trace), "budget": budget,
-                              "termination": "budget_exhausted"},
+        "retrieval_summary": done["retrieval_summary"],
     }

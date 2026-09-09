@@ -10,7 +10,7 @@ not-found response.
 from __future__ import annotations
 
 import re
-from typing import Optional
+from typing import Iterator, Optional
 
 from rdflib import URIRef
 
@@ -235,3 +235,80 @@ def answer_question(
         "context": context,
         "retrieval_summary": summary,
     }
+
+
+def _llm_messages(question: str, history: Optional[list[dict]], passages: list[str]) -> list[dict]:
+    messages: list[dict] = [{"role": "system", "content": _SYSTEM_PROMPT}]
+    if history:
+        messages += [
+            {"role": m.get("role", "user"), "content": str(m.get("content", ""))}
+            for m in history[-MAX_HISTORY:]
+            if m.get("role") in ("user", "assistant")
+        ]
+    materials = "\n\n".join(passages)
+    messages.append(
+        {"role": "user", "content": f"知识库资料：\n{materials}\n\n问题：{question}"}
+    )
+    return messages
+
+
+def stream_answer(
+    kb: KnowledgeBase,
+    question: str,
+    history: Optional[list[dict]] = None,
+    config: Optional[llm.LLMConfig] = None,
+    http=None,
+) -> Iterator[dict]:
+    """Answer *question* as a stream of event dicts for the SSE chat endpoint.
+
+    Event types: ``meta``, ``mode``, ``delta``, ``citations``, ``done``. When an
+    LLM is configured, content arrives as incremental ``delta`` events; otherwise
+    (or when streaming fails) a complete deterministic answer is emitted.
+    """
+    concepts = retrieve(kb, question)
+    passages = build_passages(concepts)
+    citations = citations_for(concepts)
+    cfg = config if config is not None else llm.read_llm_config()
+
+    def emit_fallback(note: str = "") -> Iterator[dict]:
+        answer = _fallback_answer(concepts, kb)
+        if note:
+            answer = f"{answer}\n\n（注：{note}）"
+        yield {"type": "mode", "mode": "fallback"}
+        yield {"type": "delta", "text": answer}
+        yield {"type": "citations", "citations": citations}
+        yield {"type": "done", "mode": "fallback", "citations": citations,
+               "retrieval_summary": _summary(concepts, kb)}
+
+    if not concepts:
+        yield {"type": "meta", "mode": "fallback"}
+        yield {"type": "delta", "text": _NOT_FOUND_MESSAGE}
+        yield {"type": "citations", "citations": []}
+        yield {"type": "done", "mode": "fallback", "citations": [],
+               "retrieval_summary": {"matched": 0, "anchors": [], "top": []}}
+        return
+
+    if cfg is None:
+        yield {"type": "meta", "mode": "fallback"}
+        yield from emit_fallback()
+        return
+
+    messages = _llm_messages(question, history, passages)
+    stream = llm.stream_complete(messages, config=cfg, http=http)
+    yield {"type": "meta", "mode": "llm"}
+    received = False
+    failed = False
+    if stream is not None:
+        try:
+            for chunk in stream:
+                if chunk:
+                    received = True
+                    yield {"type": "delta", "text": chunk}
+        except Exception:
+            failed = True
+    if not received or failed:
+        yield from emit_fallback("LLM 调用失败，已降级为确定性摘要。")
+    else:
+        yield {"type": "citations", "citations": citations}
+        yield {"type": "done", "mode": "llm", "citations": citations,
+               "retrieval_summary": _summary(concepts, kb)}

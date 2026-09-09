@@ -12,8 +12,9 @@ deterministic fallback answer — the demo never hard-fails on LLM availability.
 """
 from __future__ import annotations
 
+import json
 import os
-from typing import Optional
+from typing import Iterator, Optional
 
 import httpx
 
@@ -21,6 +22,10 @@ ENV_BASE_URL = "BANKING_KB_LLM_BASE_URL"
 ENV_API_KEY = "BANKING_KB_LLM_API_KEY"
 ENV_MODEL = "BANKING_KB_LLM_MODEL"
 REQUEST_TIMEOUT_SECONDS = 30.0
+
+# Process-level runtime configuration (set from the app's settings UI).
+# Consulted before the environment variables; never persisted to disk.
+_RUNTIME_CONFIG: dict[str, str] = {}
 
 
 class LLMConfig:
@@ -30,11 +35,51 @@ class LLMConfig:
         self.model = model
 
 
+def set_runtime_config(base_url: str, api_key: str, model: str) -> None:
+    """Set the runtime LLM configuration (process scope)."""
+    values = {"base_url": base_url, "api_key": api_key, "model": model}
+    cleaned = {key: str(value).strip() for key, value in values.items()}
+    if not all(cleaned.values()):
+        raise ValueError("base_url, api_key and model must all be non-blank")
+    _RUNTIME_CONFIG.clear()
+    _RUNTIME_CONFIG.update(cleaned)
+
+
+def clear_runtime_config() -> None:
+    _RUNTIME_CONFIG.clear()
+
+
+def _runtime_value(key: str) -> str:
+    return _RUNTIME_CONFIG.get(key, "")
+
+
+def config_status() -> dict:
+    """Masked status for the settings UI (never exposes the key value)."""
+    cfg = read_llm_config()
+    base_url = _runtime_value("base_url") or os.getenv(ENV_BASE_URL, "")
+    model = _runtime_value("model") or os.getenv(ENV_MODEL, "")
+    key = _runtime_value("api_key") or os.getenv(ENV_API_KEY, "")
+    source = "runtime" if _RUNTIME_CONFIG else ("env" if os.getenv(ENV_API_KEY) else "none")
+    return {
+        "configured": cfg is not None,
+        "base_url": base_url.strip().rstrip("/"),
+        "model": model.strip(),
+        "key_present": bool(key),
+        "source": source,
+    }
+
+
 def read_llm_config() -> Optional[LLMConfig]:
-    """Return the configured LLM endpoint, or ``None`` if not fully configured."""
-    base_url = os.getenv(ENV_BASE_URL, "").strip().rstrip("/")
-    api_key = os.getenv(ENV_API_KEY, "").strip()
-    model = os.getenv(ENV_MODEL, "").strip()
+    """Return the configured LLM endpoint, or ``None`` if not fully configured.
+
+    Runtime (in-app) configuration wins over environment variables.
+    """
+    base_url = _runtime_value("base_url") or os.getenv(ENV_BASE_URL, "")
+    api_key = _runtime_value("api_key") or os.getenv(ENV_API_KEY, "")
+    model = _runtime_value("model") or os.getenv(ENV_MODEL, "")
+    base_url = base_url.strip().rstrip("/")
+    api_key = api_key.strip()
+    model = model.strip()
     if not (base_url and api_key and model):
         return None
     return LLMConfig(base_url=base_url, api_key=api_key, model=model)
@@ -153,3 +198,54 @@ def _post_json(client: httpx.Client, url: str, payload: dict, headers: dict) -> 
     response = client.post(url, json=payload, headers=headers)
     response.raise_for_status()
     return response.json()
+
+
+def stream_complete(
+    messages: list[dict],
+    config: Optional[LLMConfig] = None,
+    http: Optional[httpx.Client] = None,
+) -> Optional[Iterator[str]]:
+    """Return an iterator of OpenAI-compatible streaming text chunks.
+
+    Returns ``None`` when unconfigured. Network/provider errors surface as
+    exceptions on iteration (the caller degrades gracefully); malformed data
+    lines are skipped.
+    """
+    cfg = config if config is not None else read_llm_config()
+    if cfg is None:
+        return None
+    url = f"{cfg.base_url}/chat/completions"
+    payload = {
+        "model": cfg.model,
+        "messages": messages,
+        "temperature": 0.2,
+        "stream": True,
+    }
+    headers = {
+        "Authorization": f"Bearer {cfg.api_key}",
+        "Content-Type": "application/json",
+    }
+
+    def _iterate(client: httpx.Client) -> Iterator[str]:
+        with client.stream("POST", url, json=payload, headers=headers) as response:
+            response.raise_for_status()
+            for line in response.iter_lines():
+                if not line or not line.startswith("data:"):
+                    continue
+                data = line[len("data:") :].strip()
+                if data == "[DONE]":
+                    break
+                try:
+                    obj = json.loads(data)
+                except json.JSONDecodeError:
+                    continue
+                try:
+                    chunk = obj["choices"][0]["delta"].get("content")
+                except (KeyError, IndexError, TypeError):
+                    chunk = None
+                if chunk:
+                    yield chunk
+
+    if http is not None:
+        return _iterate(http)
+    return _iterate(httpx.Client(timeout=REQUEST_TIMEOUT_SECONDS))

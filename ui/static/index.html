@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>银行概念知识库 · AI 助手</title>
+<link rel="stylesheet" href="/style.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏦</text></svg>" />
+</head>
+<body>
+<div id="app">
+  <aside id="sidebar">
+    <div class="brand">
+      <div class="brand-logo">🏦</div>
+      <div class="brand-text">
+        <div class="brand-title">概念知识库</div>
+        <div class="brand-sub">Banking Ontology · AI 助手</div>
+      </div>
+    </div>
+
+    <nav id="nav">
+      <a class="nav-item" href="#/chat" data-route="chat"><span class="nav-ico">💬</span> AI 对话</a>
+      <a class="nav-item" href="#/explore" data-route="explore"><span class="nav-ico">🔎</span> 概念探索</a>
+      <a class="nav-item" href="#/reason" data-route="reason"><span class="nav-ico">🧠</span> 推理演示</a>
+      <a class="nav-item" href="#/settings" data-route="settings"><span class="nav-ico">⚙️</span> 设置</a>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <button id="llm-status-card" class="status-card" data-mode="unknown" title="点击前往设置">
+        <span class="status-dot"></span>
+        <span class="status-text">读取 LLM 状态…</span>
+      </button>
+      <div class="sidebar-meta">
+        <button id="theme-toggle" class="ghost-btn">🌓 主题</button>
+        <div id="kb-stats" class="kb-stats">知识库载入中…</div>
+      </div>
+    </div>
+  </aside>
+
+  <main id="view">
+    <div class="view-splash">加载中…</div>
+  </main>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>

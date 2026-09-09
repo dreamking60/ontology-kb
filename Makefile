@@ -17,11 +17,12 @@ load-internal:    ## Parse ontology files plus internal/*.ttl (git-ignored data)
 test:             ## Run the pytest suite (maps to the OpenSpec spec scenarios)
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m pytest tests -q
 
-api:              ## Start the FastAPI demo server on http://127.0.0.1:8000
+api:              ## Start the FastAPI server (API + web UI) on http://127.0.0.1:8000
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m uvicorn banking_kb.api:app --reload --host 127.0.0.1 --port 8000
 
-ui:               ## Start the Streamlit demo UI on http://127.0.0.1:8501
-	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m streamlit run ui/app.py
+ui:               ## Open the web UI (served by the API server)
+	@echo "Web UI is served at http://127.0.0.1:8000 — starting the API server…"
+	$(MAKE) api
 
 check-consistency:## Optional HermiT satisfiability gate (requires Java)
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m banking_kb.consistency
