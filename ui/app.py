@@ -95,6 +95,12 @@ chat_tab, search_tab, browse_tab, reason_tab = st.tabs(
 )
 
 with chat_tab:
+    agent_mode = st.toggle(
+        "🤖 Agent 模式（工具调用）",
+        value=False,
+        help="开启后由 LLM 自主决定调用知识库工具（搜索/详情/SPARQL/推理），"
+        "可回答需要多步查询的复合问题；未配置 LLM 时仍降级为确定性摘要。",
+    )
     st.markdown(
         "基于知识库的 **RAG 问答**：回答只引用本体收录的概念（存款/贷款/理财/账户…）。"
         "未配置 LLM（`BANKING_KB_LLM_*`）时自动降级为确定性摘要（mode=fallback）。"
@@ -106,6 +112,15 @@ with chat_tab:
             st.markdown(message["content"])
             if message.get("meta"):
                 st.caption(message["meta"])
+            if message.get("trace"):
+                with st.expander(f"🧩 Agent 执行轨迹（{len(message['trace'])} 步）"):
+                    for step in message["trace"]:
+                        st.markdown(
+                            f"**第 {step['step']} 步 · `{step['tool']}`**"
+                        )
+                        if step["arguments"]:
+                            st.code(step["arguments"], language="json")
+                        st.markdown(step["summary"])
     prompt = st.chat_input("问知识库…（例如：大额存单和定期存款有什么区别？）")
     if prompt and prompt.strip():
         st.session_state.chat_messages.append({"role": "user", "content": prompt})
@@ -115,23 +130,30 @@ with chat_tab:
             {"role": m["role"], "content": m["content"]}
             for m in st.session_state.chat_messages[-6:-1]
         ]
+        endpoint = "/api/agent/chat" if agent_mode else "/api/chat"
+        label = "Agent 检索与推理…" if agent_mode else "检索知识库并生成回答…"
         with st.chat_message("assistant"):
-            with st.spinner("检索知识库并生成回答…"):
-                body = _post_json("/api/chat", {"question": prompt, "history": history})
+            with st.spinner(label):
+                body = _post_json(endpoint, {"question": prompt, "history": history})
             if body is None:
                 st.session_state.chat_messages.pop()
             else:
                 st.markdown(body["answer"])
-                mode_icon = "🟢 LLM" if body["mode"] == "llm" else "🟡 摘要(fallback)"
+                mode_icon = (
+                    "🤖 Agent"
+                    if body["mode"] == "agent"
+                    else ("🟢 LLM" if body["mode"] == "llm" else "🟡 摘要(fallback)")
+                )
                 meta_parts = [f"模式：{mode_icon}"]
                 if body["citations"]:
                     names = "、".join(c["label"] for c in body["citations"])
                     meta_parts.append(f"引用概念：{names}")
                 meta = " · ".join(meta_parts)
                 st.caption(meta)
-                st.session_state.chat_messages.append(
-                    {"role": "assistant", "content": body["answer"], "meta": meta}
-                )
+                entry: dict = {"role": "assistant", "content": body["answer"], "meta": meta}
+                if body.get("trace"):
+                    entry["trace"] = body["trace"]
+                st.session_state.chat_messages.append(entry)
 
 with search_tab:
     query = st.text_input("搜索概念（支持中文/英文标签与同义词）", placeholder="例如：存款 / 定存 / 按揭 / deposit")

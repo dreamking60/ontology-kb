@@ -61,6 +61,20 @@ make api
 > cloud endpoint in a bank environment. When the call fails, chat degrades to
 > `mode=fallback` instead of erroring.
 
+### Agent mode (tool calling)
+
+`POST /api/agent/chat` answers questions that need **several knowledge
+operations** — the LLM decides which read-only tools to call (`search_concepts`,
+`concept_detail`, `browse_tree`, `reasoning_demo`, `sparql_query`) and iterates
+before answering. Every executed step is returned in the `trace`, and citations
+reflect the concepts the tools actually touched.
+
+Degradation ladder: tools work → `mode=agent`; model rejects the `tools`
+parameter → phase-2 RAG synthesis `mode=llm`; no LLM key → deterministic
+summary `mode=fallback`. Tools are strictly read-only (the SPARQL tool only
+accepts `SELECT`/`ASK`), the loop is bounded (8 turns), and the dataset is never
+modified. Try it in the UI by enabling the **🤖 Agent 模式** toggle.
+
 ## Repository layout
 
 ```
@@ -88,6 +102,7 @@ it explicitly with `make load-internal`. See `docs/internal-import.md`.
 - `GET /api/concepts/{id}` — detail for `Deposit`, `bc:Loan`, `DemoHousingLoan`, …
 - `POST /api/reasoning/demo` — provenance-tagged reasoning facts
 - `POST /api/chat` — RAG question answering `{question, history?}` → `{answer, mode, citations, context, retrieval_summary}`
+- `POST /api/agent/chat` — tool-calling agent QA `{question, history?}` → `{answer, mode, citations, trace, retrieval_summary}`
 
 ## Development loop
 

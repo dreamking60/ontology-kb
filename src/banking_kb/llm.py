@@ -61,18 +61,95 @@ def complete(
     try:
         if http is None:
             with httpx.Client(timeout=REQUEST_TIMEOUT_SECONDS) as client:
-                return _post(client, url, payload, headers)
-        return _post(http, url, payload, headers)
+                data = _post_json(client, url, payload, headers)
+        else:
+            data = _post_json(http, url, payload, headers)
     except Exception:
         # Unconfigured, unreachable, unauthorized, or malformed -> degrade.
         return None
-
-
-def _post(client: httpx.Client, url: str, payload: dict, headers: dict) -> Optional[str]:
-    response = client.post(url, json=payload, headers=headers)
-    response.raise_for_status()
-    data = response.json()
+    if data is None:
+        return None
     try:
         return data["choices"][0]["message"]["content"]
     except (KeyError, IndexError, TypeError):
         return None
+
+
+class ToolCall:
+    """One function call requested by the model."""
+
+    def __init__(self, call_id: str, name: str, arguments: str) -> None:
+        self.id = call_id
+        self.name = name
+        self.arguments = arguments
+
+
+class ChatTurn:
+    """A model response that either carries final content or requests tools."""
+
+    def __init__(self, content: Optional[str], tool_calls: list[ToolCall]) -> None:
+        self.content = content
+        self.tool_calls = tool_calls
+
+    @property
+    def has_tool_calls(self) -> bool:
+        return bool(self.tool_calls)
+
+
+def complete_with_tools(
+    messages: list[dict],
+    tools: list[dict],
+    config: Optional[LLMConfig] = None,
+    http: Optional[httpx.Client] = None,
+) -> Optional[ChatTurn]:
+    """Call the chat endpoint with the function-calling ``tools`` parameter.
+
+    Returns a :class:`ChatTurn`, or ``None`` on unconfigured/request failure.
+    """
+    cfg = config if config is not None else read_llm_config()
+    if cfg is None:
+        return None
+    url = f"{cfg.base_url}/chat/completions"
+    payload = {
+        "model": cfg.model,
+        "messages": messages,
+        "temperature": 0.2,
+        "tools": tools,
+        "tool_choice": "auto",
+    }
+    headers = {
+        "Authorization": f"Bearer {cfg.api_key}",
+        "Content-Type": "application/json",
+    }
+    try:
+        if http is None:
+            with httpx.Client(timeout=REQUEST_TIMEOUT_SECONDS) as client:
+                data = _post_json(client, url, payload, headers)
+        else:
+            data = _post_json(http, url, payload, headers)
+    except Exception:
+        return None
+    if data is None:
+        return None
+    try:
+        message = data["choices"][0]["message"]
+    except (KeyError, IndexError, TypeError):
+        return None
+    content = message.get("content")
+    tool_calls = []
+    for call in message.get("tool_calls") or []:
+        function = call.get("function") or {}
+        tool_calls.append(
+            ToolCall(
+                call_id=call.get("id") or f"call_{len(tool_calls)}",
+                name=str(function.get("name", "")),
+                arguments=str(function.get("arguments", "") or "{}"),
+            )
+        )
+    return ChatTurn(content=content, tool_calls=tool_calls)
+
+
+def _post_json(client: httpx.Client, url: str, payload: dict, headers: dict) -> Optional[dict]:
+    response = client.post(url, json=payload, headers=headers)
+    response.raise_for_status()
+    return response.json()

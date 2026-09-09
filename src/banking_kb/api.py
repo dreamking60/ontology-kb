@@ -16,7 +16,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, field_validator
 
-from . import rag, reasoning
+from . import agent, rag, reasoning
 from .kb import KnowledgeBase
 from .search import search
 
@@ -99,3 +99,14 @@ def chat(request: ChatRequest) -> dict:
         else None
     )
     return rag.answer_question(kb, request.question, history=history)
+
+
+@app.post("/api/agent/chat")
+def agent_chat(request: ChatRequest) -> dict:
+    """Tool-calling agent question answering (specs/agentic-question-answering)."""
+    history = (
+        [{"role": m.role, "content": m.content} for m in request.history]
+        if request.history
+        else None
+    )
+    return agent.run_agent_question(kb, request.question, history=history)

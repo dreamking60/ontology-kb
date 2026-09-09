@@ -105,11 +105,42 @@ curl -s -X POST http://127.0.0.1:8000/api/chat \
 In the UI, open the **💬 智能问答** tab and chat; sources and mode are shown
 under each assistant message.
 
-## 6. Validation & acceptance
+## 6. Agent mode (specs/agentic-question-answering)
+
+No-key mode (deterministic fallback — same grounding, no tools):
+
+```bash
+curl -s -X POST http://127.0.0.1:8000/api/agent/chat \
+  -H "Content-Type: application/json" \
+  -d '{"question": "哪些示例产品受存款保险保障？"}' | python3 -m json.tool
+# expect: mode=fallback, trace=[], deterministic summary with citations
+
+curl -si -X POST http://127.0.0.1:8000/api/agent/chat \
+  -H "Content-Type: application/json" -d '{"question": " "}' | head -1
+# expect: HTTP/1.1 422 (empty question rejected before any LLM call)
+```
+
+Agent mode (requires a tool-calling model, same `BANKING_KB_LLM_*` exports):
+
+```bash
+curl -s -X POST http://127.0.0.1:8000/api/agent/chat \
+  -H "Content-Type: application/json" \
+  -d '{"question": "哪些示例产品受存款保险保障？它们的期限分别是多少？"}' | python3 -m json.tool
+# expect: mode=agent; trace shows e.g. sparql_query + concept_detail steps;
+#         answer cites the matching 示例… deposit products
+```
+
+If the configured model rejects `tools`, the endpoint transparently returns
+`mode=llm` (phase-2 RAG synthesis). Read-only guarantees: the SPARQL tool only
+accepts `SELECT`/`ASK`; `INSERT`/`DELETE`/`LOAD`/`CLEAR` return a read-only
+error and the dataset is never changed. In the UI, enable the **🤖 Agent 模式**
+toggle and open the 执行轨迹 expander to inspect each step.
+
+## 7. Validation & acceptance
 
 ```bash
 make test
-openspec validate --changes rag-concept-qa --strict
+openspec validate --changes agentic-qa-assistant --strict
 ```
 
 All spec scenarios have matching pytest tests; the change must stay green before
