@@ -8,14 +8,20 @@ from banking_kb import reasoning
 from banking_kb.kb import BC, KnowledgeBase
 from banking_kb.search import search
 
-# The five coverage categories from specs/knowledge-content/spec.md.
+# The coverage categories from specs/knowledge-content/spec.md, extended by
+# the ontology-enrichment delta (rate & pricing, banking events added).
 CATEGORY_ROOTS = {
     "deposit": BC.Deposit,
     "loan": BC.Loan,
     "wealth_management": BC.WealthManagementProduct,
     "account": BC.Account,
     "party": BC.Party,
+    "rate": BC.Rate,
+    "banking_event": BC.BankingEvent,
 }
+
+EXPANDED_MIN_CLASSES = 50
+EXPANDED_MIN_INDIVIDUALS = 30
 
 # Builtin vocabularies allowed as un-declared reference targets.
 _BUILTIN_NAMESPACES = (
@@ -109,3 +115,61 @@ def test_no_internal_data_markers(kb):
         assert not any(m in text for m in markers), f"marker in editorialNote: {text}"
     for label in kb.graph.objects(None, RDFS.label):
         assert "招商银行" not in str(label)
+
+
+# --------------------------------------------------------------------------- #
+# ontology-enrichment delta: expanded corpus and verified FIBO alignment
+# --------------------------------------------------------------------------- #
+
+def test_expanded_corpus_counts(kb):
+    classes = [c for c in kb.candidate_concepts() if kb.is_class(c)]
+    individuals = [c for c in kb.candidate_concepts() if not kb.is_class(c)]
+    assert len(classes) >= EXPANDED_MIN_CLASSES, f"only {len(classes)} classes"
+    assert len(individuals) >= EXPANDED_MIN_INDIVIDUALS, f"only {len(individuals)} individuals"
+
+
+def test_expanded_categories_present(kb):
+    classes = set(_classes(kb))
+    for category, root in CATEGORY_ROOTS.items():
+        subtree = {c for c in kb.descendants(root) if c in classes}
+        assert subtree, f"category {category} has no curated class"
+        assert any(kb.definition(c) for c in subtree), (
+            f"category {category} has no curated class with a definition"
+        )
+
+
+def test_all_alignment_iris_resolve_in_pinned_manifest(kb, repo_root):
+    import json
+
+    manifest = json.loads(
+        (repo_root / "docs" / "reference" / "fibo-verified.json").read_text(encoding="utf-8")
+    )
+    known = {iri for module in manifest.values() for iri in module.values()}
+    aligned = {str(o) for o in kb.graph.objects(BC.Deposit, BC.alignedToFibo)}
+    for node in kb.candidate_concepts():
+        aligned |= {str(o) for o in kb.graph.objects(node, BC.alignedToFibo)}
+    assert aligned, "no alignment annotations found"
+    unresolved = [iri for iri in sorted(aligned) if iri not in known]
+    assert unresolved == [], f"unresolved alignment IRIs: {unresolved}"
+
+
+def test_no_legacy_best_effort_alignment_iris(kb):
+    legacy = "FND/ProductsAndServices/FinancialProductsAndServices/Deposit"
+    for node in kb.candidate_concepts():
+        for obj in kb.graph.objects(node, BC.alignedToFibo):
+            assert legacy not in str(obj), f"stale best-effort IRI on {node}"
+
+
+def test_alignment_doc_lists_modules_and_date(repo_root):
+    doc = (repo_root / "docs" / "fibo-alignment.md").read_text(encoding="utf-8")
+    assert "ClientsAndAccounts" in doc and "Mortgages" in doc
+    assert "119fa8c091aa4beece7d22aefa6fe138021a4355" in doc
+    assert "never imports" in doc or "never imported" in doc
+
+
+def test_sources_dossier_lists_fibo(repo_root):
+    dossier = (repo_root / "docs" / "reference" / "ontology-sources.md").read_text(
+        encoding="utf-8"
+    )
+    assert "github.com/edmcouncil/fibo" in dossier
+    assert "self-authored" in dossier

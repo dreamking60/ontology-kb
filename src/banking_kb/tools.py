@@ -125,6 +125,14 @@ def tool_browse_tree(kb: KnowledgeBase, arguments: dict) -> tuple[str, list[dict
             rendered += 1
             indent = "  " * depth
             lines.append(f"{indent}- {node['label_zh']} ({node['label_en']})")
+            if depth == 0 and not root:
+                # Top-level overview: show direct children only, not the full tree.
+                for child in node["children"][:8]:
+                    if rendered >= max_nodes:
+                        return
+                    rendered += 1
+                    lines.append(f"  {indent}  - {child['label_zh']} ({child['label_en']})")
+                continue
             walk(node["children"], depth + 1)
 
     walk(tree, 0)

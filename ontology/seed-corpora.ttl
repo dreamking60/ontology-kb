@@ -135,3 +135,195 @@ ex:SampleCorporateCustomer a bc:CorporateCustomer ;
     skos:definition "演示用的对公（企业）客户主体。"@zh ;
     skos:definition "A corporate customer party used for the demo."@en ;
     skos:editorialNote "Public generic demo seed; not internal bank data."@en .
+
+###############################################################################
+# Enrichment seeds (ontology-enrichment) — public generic demo individuals
+###############################################################################
+
+ex:DemoNotificationDeposit a bc:NotificationDeposit ;
+    rdfs:label "示例通知存款"@zh, "Example notice deposit"@en ;
+    skos:definition "演示用通知存款（公开通用示例数据，支取需提前通知）。"@zh ;
+    skos:definition "Demo notice deposit (public generic sample data; prior notice required to withdraw)."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en ;
+    bc:minimumAmount 50000 ;
+    bc:interestRate 0.8 ;
+    bc:riskLevel "低" ;
+    bc:liquidity "中" ;
+    bc:depositInsuranceCovered true ;
+    bc:offeredBy ex:SampleBank .
+
+ex:DemoNegotiatedDeposit a bc:NegotiatedDeposit ;
+    rdfs:label "示例协定存款"@zh, "Example agreement deposit"@en ;
+    skos:definition "演示用企业协定存款（公开通用示例数据，超出约定基数部分按协定利率计息）。"@zh ;
+    skos:definition "Demo corporate agreement deposit (public generic sample data)."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en ;
+    bc:minimumAmount 1000000 ;
+    bc:interestRate 1.15 ;
+    bc:riskLevel "低" ;
+    bc:liquidity "中" ;
+    bc:depositInsuranceCovered true ;
+    bc:offeredBy ex:SampleBank .
+
+ex:DemoStructuredDeposit a bc:StructuredDeposit ;
+    rdfs:label "示例结构性存款"@zh, "Example structured deposit"@en ;
+    skos:definition "演示用结构性存款（公开通用示例数据，收益与挂钩标的相关）。"@zh ;
+    skos:definition "Demo structured deposit (public generic sample data; return linked to an underlying)."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en ;
+    bc:termMonths 6 ;
+    bc:minimumAmount 10000 ;
+    bc:riskLevel "中" ;
+    bc:liquidity "低" ;
+    bc:depositInsuranceCovered true ;
+    bc:offeredBy ex:SampleBank .
+
+ex:DemoConsumptionLoan a bc:ConsumptionLoan ;
+    rdfs:label "示例消费贷款"@zh, "Example consumer loan"@en ;
+    skos:definition "演示用个人消费贷款（公开通用示例数据）。"@zh ;
+    skos:definition "Demo personal consumer loan (public generic sample data)."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en ;
+    bc:termMonths 36 ;
+    bc:interestRate 3.6 ;
+    bc:riskLevel "中" ;
+    bc:liquidity "低" ;
+    bc:offeredBy ex:SampleBank .
+
+ex:DemoBusinessLoan a bc:BusinessOperationLoan ;
+    rdfs:label "示例经营贷款"@zh, "Example personal business loan"@en ;
+    skos:definition "演示用个人经营贷款（公开通用示例数据）。"@zh ;
+    skos:definition "Demo personal business loan (public generic sample data)."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en ;
+    bc:termMonths 24 ;
+    bc:interestRate 4.0 ;
+    bc:riskLevel "中" ;
+    bc:liquidity "低" ;
+    bc:offeredBy ex:SampleBank .
+
+ex:DemoAutoLoan a bc:AutoLoan ;
+    rdfs:label "示例汽车贷款"@zh, "Example auto loan"@en ;
+    skos:definition "演示用汽车贷款（公开通用示例数据，以所购车辆担保）。"@zh ;
+    skos:definition "Demo auto loan (public generic sample data; secured by the vehicle)."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en ;
+    bc:termMonths 48 ;
+    bc:interestRate 3.9 ;
+    bc:riskLevel "中" ;
+    bc:liquidity "低" ;
+    bc:offeredBy ex:SampleBank .
+
+ex:DemoWorkingCapitalLoan a bc:WorkingCapitalLoan ;
+    rdfs:label "示例流动资金贷款"@zh, "Example working capital loan"@en ;
+    skos:definition "演示用企业流动资金贷款（公开通用示例数据）。"@zh ;
+    skos:definition "Demo corporate working capital loan (public generic sample data)."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en ;
+    bc:termMonths 12 ;
+    bc:interestRate 3.3 ;
+    bc:riskLevel "中" ;
+    bc:liquidity "低" ;
+    bc:offeredBy ex:SampleBank .
+
+ex:DemoFixedAssetLoan a bc:FixedAssetLoan ;
+    rdfs:label "示例固定资产贷款"@zh, "Example fixed asset loan"@en ;
+    skos:definition "演示用固定资产贷款（公开通用示例数据）。"@zh ;
+    skos:definition "Demo fixed asset loan (public generic sample data)."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en ;
+    bc:termMonths 120 ;
+    bc:interestRate 3.5 ;
+    bc:riskLevel "中" ;
+    bc:liquidity "低" ;
+    bc:offeredBy ex:SampleBank .
+
+ex:DemoCollateralizedLoan a bc:CollateralizedLoan ;
+    rdfs:label "示例抵押贷款"@zh, "Example collateralized loan"@en ;
+    skos:definition "演示用以抵押物担保的贷款（公开通用示例数据）。"@zh ;
+    skos:definition "Demo loan secured by collateral (public generic sample data)."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en ;
+    bc:termMonths 60 ;
+    bc:interestRate 3.2 ;
+    bc:riskLevel "中" ;
+    bc:liquidity "低" ;
+    bc:offeredBy ex:SampleBank .
+
+ex:DemoHybridWealthProduct a bc:HybridWealthProduct ;
+    rdfs:label "示例混合类理财产品"@zh, "Example hybrid wealth product"@en ;
+    skos:definition "演示用混合类理财产品（公开通用示例数据）。"@zh ;
+    skos:definition "Demo hybrid wealth-management product (public generic sample data)."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en ;
+    bc:annualizedReturn 3.6 ;
+    bc:riskLevel "中" ;
+    bc:liquidity "低" ;
+    bc:minimumAmount 1000 ;
+    bc:offeredBy ex:SampleBank .
+
+ex:DemoEquityWealthProduct a bc:EquityWealthProduct ;
+    rdfs:label "示例权益类理财产品"@zh, "Example equity wealth product"@en ;
+    skos:definition "演示用权益类理财产品（公开通用示例数据，主要投资股票）。"@zh ;
+    skos:definition "Demo equity wealth-management product (public generic sample data)."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en ;
+    bc:annualizedReturn 5.0 ;
+    bc:riskLevel "高" ;
+    bc:liquidity "低" ;
+    bc:minimumAmount 1000 ;
+    bc:offeredBy ex:SampleBank .
+
+ex:DemoTimeDepositAccount a bc:TimeDepositAccount ;
+    rdfs:label "示例定期存款账户"@zh, "Example time deposit account"@en ;
+    skos:definition "演示用定期存款账户（公开通用示例数据）。"@zh ;
+    skos:definition "Demo time deposit account (public generic sample data)."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en ;
+    bc:supportsProduct ex:DemoLongTermDeposit .
+
+ex:DemoDemandDepositAccount a bc:DemandDepositAccount ;
+    rdfs:label "示例活期存款账户"@zh, "Example demand deposit account"@en ;
+    skos:definition "演示用活期存款账户（公开通用示例数据）。"@zh ;
+    skos:definition "Demo demand deposit account (public generic sample data)."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en ;
+    bc:supportsProduct ex:DemoDemandDeposit .
+
+ex:DemoLoanAccount a bc:LoanAccount ;
+    rdfs:label "示例贷款账户"@zh, "Example loan account"@en ;
+    skos:definition "演示用贷款账户（公开通用示例数据，用于记载贷款发放与偿还）。"@zh ;
+    skos:definition "Demo loan account (public generic sample data)."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en ;
+    bc:supportsProduct ex:DemoHousingLoan .
+
+ex:DemoBasicDepositAccount a bc:BasicDepositAccount ;
+    rdfs:label "示例基本存款账户"@zh, "Example basic deposit account"@en ;
+    skos:definition "演示用单位基本存款账户（公开通用示例数据）。"@zh ;
+    skos:definition "Demo corporate basic deposit account (public generic sample data)."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en .
+
+ex:DemoGeneralDepositAccount a bc:GeneralDepositAccount ;
+    rdfs:label "示例一般存款账户"@zh, "Example general deposit account"@en ;
+    skos:definition "演示用单位一般存款账户（公开通用示例数据）。"@zh ;
+    skos:definition "Demo corporate general deposit account (public generic sample data)."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en .
+
+ex:SampleFinancialInstitutionCustomer a bc:FinancialInstitutionCustomer ;
+    rdfs:label "示例金融机构客户"@zh, "Sample financial-institution customer"@en ;
+    skos:definition "演示用的同业（金融机构）客户主体。"@zh ;
+    skos:definition "A financial-institution (interbank) customer party used for the demo."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en .
+
+ex:SampleBorrower a bc:Borrower ;
+    rdfs:label "示例借款人"@zh, "Sample borrower"@en ;
+    skos:definition "演示用的借款人角色主体。"@zh ;
+    skos:definition "A borrower-role party used for the demo."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en .
+
+ex:SampleDepositor a bc:Depositor ;
+    rdfs:label "示例存款人"@zh, "Sample depositor"@en ;
+    skos:definition "演示用的存款人角色主体。"@zh ;
+    skos:definition "A depositor-role party used for the demo."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en .
+
+ex:SampleEmployee a bc:Employee ;
+    rdfs:label "示例员工"@zh, "Sample employee"@en ;
+    skos:definition "演示用的银行员工主体（知识库使用者角色）。"@zh ;
+    skos:definition "A bank-employee party representing the knowledge-base user role in the demo."@en ;
+    skos:editorialNote "Public generic demo seed; not internal bank data."@en .
+
+ex:SampleLPRBenchmark a bc:BenchmarkRate ;
+    rdfs:label "示例 1 年期 LPR 参考利率"@zh, "Example 1Y LPR reference rate"@en ;
+    skos:definition "公开通用的贷款市场报价利率（LPR）参考示例，仅用于演示基准利率概念。"@zh ;
+    skos:definition "A public Loan Prime Rate (LPR) reference example, used only to demonstrate the benchmark-rate concept."@en ;
+    skos:editorialNote "Public benchmark reference for the demo; not an institution-specific product or live market quote."@en ;
+    bc:interestRate 3.45 .

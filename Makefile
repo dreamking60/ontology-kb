@@ -25,3 +25,6 @@ ui:               ## Start the Streamlit demo UI on http://127.0.0.1:8501
 
 check-consistency:## Optional HermiT satisfiability gate (requires Java)
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m banking_kb.consistency
+
+check-alignment:  ## Verify every FIBO alignment IRI resolves in the pinned snapshot
+	$(PYTHON) scripts/verify_fibo_alignment.py

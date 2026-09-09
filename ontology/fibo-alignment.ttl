@@ -4,27 +4,64 @@
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 
 ###############################################################################
-# FIBO alignment annotations (annotation only — FIBO is never imported).
-# Term IRIs below follow the https://spec.edmcouncil.org/fibo/ontology/
-# pattern; exact module paths are best-effort for the MVP and MUST be
-# verified against the current FIBO 2.0 release before production use.
-# See docs/fibo-alignment.md for the human-readable mapping table.
+# FIBO alignment annotations — REBUILT AND VERIFIED (ontology-enrichment).
+# Every IRI below was verified to exist as an owl:Class/NamedIndividual in the
+# pinned FIBO snapshot (edmcouncil/fibo commit
+# 119fa8c091aa4beece7d22aefa6fe138021a4355, fetched 2026-09-09).
+# Annotation only — FIBO is never imported. Definitions in this repository are
+# self-authored; FIBO is used for term/hierarchy alignment only.
+# See docs/fibo-alignment.md (mapping source of truth) and
+# docs/reference/ontology-sources.md (licenses). Verified programmatically by
+# scripts/verify_fibo_alignment.py (`make check-alignment`).
 ###############################################################################
 
+# --- FND/ProductsAndServices/ProductsAndServices ----------------------------
+bc:Product
+    bc:alignedToFibo <https://spec.edmcouncil.org/fibo/ontology/FND/ProductsAndServices/ProductsAndServices/Product> .
+
+# --- FBC/ProductsAndServices/ClientsAndAccounts -----------------------------
+bc:Account
+    bc:alignedToFibo <https://spec.edmcouncil.org/fibo/ontology/FBC/ProductsAndServices/ClientsAndAccounts/Account> .
+
+# Deposit-side alignments use FIBO's account-style deposit terms (nearest
+# semantic match for deposit arrangements; see alignment doc notes).
 bc:Deposit
-    bc:alignedToFibo <https://spec.edmcouncil.org/fibo/ontology/FND/ProductsAndServices/FinancialProductsAndServices/Deposit> .
+    bc:alignedToFibo <https://spec.edmcouncil.org/fibo/ontology/FBC/ProductsAndServices/ClientsAndAccounts/DepositAccount> .
 
 bc:DemandDeposit
-    bc:alignedToFibo <https://spec.edmcouncil.org/fibo/ontology/FND/ProductsAndServices/FinancialProductsAndServices/Deposit> .
+    bc:alignedToFibo <https://spec.edmcouncil.org/fibo/ontology/FBC/ProductsAndServices/ClientsAndAccounts/DemandDepositAccount> .
+
+bc:DemandDepositAccount
+    bc:alignedToFibo <https://spec.edmcouncil.org/fibo/ontology/FBC/ProductsAndServices/ClientsAndAccounts/DemandDepositAccount> .
 
 bc:TimeDeposit
-    bc:alignedToFibo <https://spec.edmcouncil.org/fibo/ontology/FND/ProductsAndServices/FinancialProductsAndServices/Deposit> .
+    bc:alignedToFibo <https://spec.edmcouncil.org/fibo/ontology/FBC/ProductsAndServices/ClientsAndAccounts/TimeDepositAccount> .
+
+bc:TimeDepositAccount
+    bc:alignedToFibo <https://spec.edmcouncil.org/fibo/ontology/FBC/ProductsAndServices/ClientsAndAccounts/TimeDepositAccount> .
 
 bc:CertificateOfDeposit
-    bc:alignedToFibo <https://spec.edmcouncil.org/fibo/ontology/FND/ProductsAndServices/FinancialProductsAndServices/Deposit> .
+    bc:alignedToFibo <https://spec.edmcouncil.org/fibo/ontology/FBC/ProductsAndServices/ClientsAndAccounts/TimeCertificateOfDepositAccount> .
 
+bc:SavingsAccount
+    bc:alignedToFibo <https://spec.edmcouncil.org/fibo/ontology/FBC/ProductsAndServices/ClientsAndAccounts/NonTransactionDepositAccount> .
+
+bc:SettlementAccount
+    bc:alignedToFibo <https://spec.edmcouncil.org/fibo/ontology/FBC/ProductsAndServices/ClientsAndAccounts/TransactionDepositAccount> .
+
+bc:LoanAccount
+    bc:alignedToFibo <https://spec.edmcouncil.org/fibo/ontology/FBC/ProductsAndServices/ClientsAndAccounts/LoanOrCreditAccount> .
+
+# --- FBC/FunctionalEntities/FinancialServicesEntities -----------------------
+bc:Bank
+    bc:alignedToFibo <https://spec.edmcouncil.org/fibo/ontology/FBC/FunctionalEntities/FinancialServicesEntities/Bank> .
+
+# --- LOAN modules -----------------------------------------------------------
 bc:Loan
-    bc:alignedToFibo <https://spec.edmcouncil.org/fibo/ontology/FND/ProductsAndServices/FinancialProductsAndServices/Loan> .
+    bc:alignedToFibo <https://spec.edmcouncil.org/fibo/ontology/LOAN/LoansGeneral/Loans/Loan> .
 
 bc:HousingLoan
-    bc:alignedToFibo <https://spec.edmcouncil.org/fibo/ontology/FND/ProductsAndServices/FinancialProductsAndServices/Loan> .
+    bc:alignedToFibo <https://spec.edmcouncil.org/fibo/ontology/LOAN/RealEstateLoans/Mortgages/Mortgage> .
+
+bc:ConsumptionLoan
+    bc:alignedToFibo <https://spec.edmcouncil.org/fibo/ontology/LOAN/LoansSpecific/ConsumerLoans/ConsumerLoan> .

@@ -9,9 +9,14 @@ class hierarchy, and watch OWL reasoning derive facts with full provenance.
 
 - **`banking-core` ontology** (OWL2, Turtle): product, account and party
   concept hierarchies with bilingual (中文/English) labels, synonyms and
-  definitions, authored for Protégé.
+  definitions, authored for Protégé. **Enriched (ontology-enrichment): 60
+  curated concept classes and 34 example individuals** across deposits, loans,
+  wealth management, accounts, parties/roles, rate & pricing, and banking
+  events.
 - **FIBO alignment by annotation only**: `ontology/fibo-alignment.ttl` maps
-  selected classes to FIBO terms; FIBO itself is never imported.
+  selected classes to FIBO terms **verified against a pinned FIBO snapshot**
+  (see `docs/fibo-alignment.md` + `docs/reference/`); FIBO itself is never
+  imported.
 - **Semantic search** with hierarchy expansion and synonym matching
   (specs/concept-search), **tree browser** (specs/concept-browser), a
   **reasoning demo** with `asserted` / `inferred` / `rule-derived` provenance
