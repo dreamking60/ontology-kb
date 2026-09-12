@@ -1,7 +1,7 @@
 PYTHON := .venv/bin/python
 PYTHONPATH := src
 
-.PHONY: setup load test api ui check-consistency load-internal
+.PHONY: setup load test api ui check-consistency check-alignment load-internal install-skills install-skills-link
 
 setup:            ## Create venv and install dependencies
 	python3 -m venv .venv
@@ -29,3 +29,9 @@ check-consistency:## Optional HermiT satisfiability gate (requires Java)
 
 check-alignment:  ## Verify every FIBO alignment IRI resolves in the pinned snapshot
 	$(PYTHON) scripts/verify_fibo_alignment.py
+
+install-skills:   ## Install OpenSpec skills into the user-global skill root (~/.agents/skills)
+	bash scripts/install_global_skills.sh
+
+install-skills-link: ## Same, but symlink so `openspec update` refreshes them automatically
+	bash scripts/install_global_skills.sh link

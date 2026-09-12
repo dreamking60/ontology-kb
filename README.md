@@ -125,6 +125,31 @@ it explicitly with `make load-internal`. See `docs/internal-import.md`.
 - `POST /api/agent/chat` — tool-calling agent QA (one-shot)
 - `POST /api/agent/chat/stream` — same, as an SSE stream (step events + deltas)
 
+## OpenSpec skills in every session (global install)
+
+DeepSeek Harness discovers skills from **project roots** (`<project>/.dsh/skills`,
+`<project>/.agents/skills`) and **user-global roots** (`$DSH_HOME/skills` →
+`~/.dsh/skills`, and `$DSH_AGENTS_HOME/skills` → `~/.agents/skills`). `openspec init
+--tools agents` writes project-local skills only, so they would otherwise appear
+just in this repository's sessions.
+
+Install them globally — then they are available in every DSH session, any
+workspace, any standard mode:
+
+```bash
+make install-skills        # copy    → robust, independent of this checkout
+make install-skills-link   # symlink → `openspec update` refreshes them automatically
+```
+
+- Script: `scripts/install_global_skills.sh`; destination
+  `${DSH_AGENTS_HOME:-$HOME/.agents}/skills` (all-session root). `~/.dsh/skills` is
+  an equivalent alternative if you prefer DSH-only scoping.
+- **Project roots rank higher than user roots**, so a repository's own generated
+  skills always win over the global copy with the same name.
+- After upgrading OpenSpec (`openspec update` regenerates this repo's skills),
+  re-run `make install-skills` to refresh the global copies.
+- The global install lives outside the repository and is never committed.
+
 ## Development loop
 
 Behavior is specified in `openspec/specs/` (main specs, synced at archive) and
